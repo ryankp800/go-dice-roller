@@ -49,7 +49,7 @@ func rollDiceHandler(w http.ResponseWriter,
 	var dieList DiceRoll
 
 	//First iterate through all of the value objects in the list
-	for i, value := range valueList {
+	for _, value := range valueList {
 
 		//Use regex to split the d value
 		me := re.Split(value, -1)
