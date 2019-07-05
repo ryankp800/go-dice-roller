@@ -37,22 +37,33 @@ func helloWorldHandler(w http.ResponseWriter, r *http.Request) {
 func rollDiceHandler(w http.ResponseWriter,
 	r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	
+	//Get the dice value list from the rul
 	number := r.URL.Query()
-	log.Println(number)
+
+	//Get the value property and put it into an array
 	valueList := number["value"]
 
-	log.Println(valueList)
+	//Setup regex to split on the 'd' value
 	re := regexp.MustCompile("[Dd]")
 	var dieList DiceRoll
-	for i, value := range valueList {
-		me := re.Split(value, -1)
-		log.Println("value {i} {s}", i, me)
-		log.Println("value [0] then [1]", me[0], me[1])
 
+	//First iterate through all of the value objects in the list
+	for i, value := range valueList {
+
+		//Use regex to split the d value
+		me := re.Split(value, -1)
+
+		//Check if there are greater than 0 dice
 		if numOfDie, err := strconv.Atoi(me[0]); err == nil {
 
+			//For each die of that vlaue being rolled create a die object
 			for j := 0; j < numOfDie; j++ {
+
+				//Convert the Value string to an int
 				if dVal, err := strconv.Atoi(me[1]); err == nil {
+
+					//Create die of the value and then appen it to the die list
 					die := Dice{DiceValue: dVal, ID: 1, Rolled: false, RollValue: 0}
 					dieList.DiceList = append(dieList.DiceList, die)
 				} else {
@@ -63,15 +74,16 @@ func rollDiceHandler(w http.ResponseWriter,
 
 	}
 
+	//Roll the completed dielist
 	dieList = Roll(dieList)
 
-	log.Println(dieList)
-
+	//Marshal the list
 	data, err := json.Marshal(dieList)
 	if err != nil {
 		log.Fatalf("JSON marshalling failed: %s", err)
 	}
 
+	//Write to the response
 	w.Write(data)
 
 }
@@ -80,16 +92,14 @@ func rollDiceHandler(w http.ResponseWriter,
 func Roll(roll DiceRoll) DiceRoll {
 
 	for i, dice := range roll.DiceList {
+		//Roll the dice
 		rollValue := rand.Intn(dice.DiceValue) + 1
-		log.Println("Dice", dice.RollValue)
 		roll.DiceList[i].Rolled = true
 		roll.OverallRollValue += rollValue
-		log.Println("Dice", dice)
+		
+		//Set the value
 		roll.DiceList[i].RollValue = rollValue
 	}
-
-	log.Println(roll)
-
 	return roll
 }
 
