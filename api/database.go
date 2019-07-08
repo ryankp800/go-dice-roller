@@ -22,8 +22,9 @@ var Collection *mongo.Collection
 func ConfigMongo() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	//mongodb://heroku_qkwm7vgb:tqug715ledj81r2gs24ajqj4kj@ds213255.mlab.com:13255/heroku_qkwm7vgb
+	clientOptions := options.Client().ApplyURI("mongodb://heroku_qkwm7vgb:tqug715ledj81r2gs24ajqj4kj@ds213255.mlab.com:13255/heroku_qkwm7vgb")
+	// clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		log.Fatal(err)
@@ -38,8 +39,6 @@ func ConfigMongo() {
 
 	Collection = client.Database("diceroller").Collection("rolls")
 }
-
-
 
 func getDiceRollByID(objectID string) DiceRoll {
 	id, _ := primitive.ObjectIDFromHex(objectID)
