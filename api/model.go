@@ -18,3 +18,25 @@ type DiceRoll struct {
 	DiceList         []Dice             `json:"diceList,omitempty"`
 	OverallRollValue int                `json:"overallRollResult,omitempty"`
 }
+
+//Message Define our message object
+type Message struct {
+	Email    string `json:"email,omitempty"`
+	Username string `json:"username,omitempty"`
+	Message  string `json:"message,omitempty"`
+}
+
+//InitiativeRoll a single PC initiative roll within a battle
+type InitiativeRoll struct {
+	Name            string `json:"name,omitempty"`
+	PlayerCharacter bool   `json:"player_character,omitempty"`
+	Advantage       bool   `json:"advantage,omitempty"`
+	Modifier        int    `json:"modifier,omitempty"`
+	FinalValue      int    `json:"final_value,omitempty"`
+}
+
+//Battle object that structures the current fight
+type Battle struct {
+	Characters []InitiativeRoll `json:"participants,omitempty"`
+	IsComplete bool             `json:"is_complete,omitempty"`
+}

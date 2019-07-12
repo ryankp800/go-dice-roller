@@ -20,6 +20,16 @@ func HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(`{"hello": "there"}`)
 }
 
+//ResetBattleHandler clears battle object
+func ResetBattleHandler(w http.ResponseWriter, r *http.Request) {
+	resetBattle()
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(`{"battleReset": true}`)
+
+}
+
 //GetRollHandler gets a roll from the database based on the object ID
 func GetRollHandler(w http.ResponseWriter,
 	r *http.Request) {
@@ -32,6 +42,7 @@ func GetRollHandler(w http.ResponseWriter,
 	json.NewEncoder(w).Encode(roll)
 
 }
+
 //RollDiceHandler roll dice yo
 func RollDiceHandler(w http.ResponseWriter,
 	r *http.Request) {
@@ -92,14 +103,17 @@ func RollDiceHandler(w http.ResponseWriter,
 //Roll Takes in a dice list and returns a new Rolled List
 func Roll(roll DiceRoll) DiceRoll {
 
-	for i, dice := range roll.DiceList {
-		//Roll the dice
-		rollValue := rand.Intn(dice.DiceValue) + 1
-		roll.DiceList[i].Rolled = true
-		roll.OverallRollValue += rollValue
-
-		//Set the value
-		roll.DiceList[i].RollValue = rollValue
+	for _, dice := range roll.DiceList {
+		RollDie(&dice)
+		roll.OverallRollValue += dice.RollValue
 	}
 	return roll
+}
+
+//RollDie rolls and individual die
+func RollDie(dice *Dice) {
+	//Roll the dice
+	log.Println(dice)
+	dice.RollValue = rand.Intn(dice.DiceValue) + 1
+	dice.Rolled = true
 }

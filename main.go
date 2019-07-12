@@ -5,10 +5,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ryankp800/golang-dice-roller/api"
-
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/ryankp800/golang-dice-roller/api"
 )
 
 func main() {
@@ -20,10 +19,15 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/hello", api.HelloWorldHandler).Methods("GET")
+	r.HandleFunc("/ws", api.HandleConnections)
 	r.HandleFunc("/roll", api.RollDiceHandler)
+	r.HandleFunc("/reset", api.ResetBattleHandler)
 	r.HandleFunc("/getRoll/{id}", api.GetRollHandler).Methods("GET")
 	r.Queries("value", "{value}")
 	http.Handle("/", r)
+
+	go api.HandleInitiative()
+
 	// Apply the CORS middleware to our top-level router, with the defaults.
 	http.ListenAndServe(GetPort(), handlers.CORS(corsObj)(r))
 }
