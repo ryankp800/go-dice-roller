@@ -1,4 +1,4 @@
-package api
+package controller
 
 import (
 	"context"
@@ -23,19 +23,17 @@ var Collection *mongo.Collection
 func ConfigMongo() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	os.Setenv("MONGODB_URI", "mongodb://localhost:27017")
+	// _ = os.Setenv("MONGODB_URI", "mongodb://localhost:27017")
 	//mongodb://heroku_qkwm7vgb:tqug715ledj81r2gs24ajqj4kj@ds213255.mlab.com:13255/heroku_qkwm7vgb
 
 	clientOptions := options.Client().ApplyURI(os.Getenv("MONGODB_URI"))
 
 	// clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	client, err := mongo.Connect(ctx, clientOptions)
-	if err != nil {
+	client, err := mongo.Connect(ctx, clientOptions); if err != nil {
 		log.Fatal("this", err)
 	}
 
-	err = client.Ping(context.TODO(), nil)
-	if err != nil {
+	err = client.Ping(context.TODO(), nil); if err != nil {
 		log.Fatal(err)
 	}
 
@@ -44,7 +42,7 @@ func ConfigMongo() {
 	Collection = client.Database("diceroller").Collection("rolls")
 }
 
-func getDiceRollByID(objectID string) DiceRoll {
+func GetDiceRollByID(objectID string) DiceRoll {
 	id, _ := primitive.ObjectIDFromHex(objectID)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -55,12 +53,10 @@ func getDiceRollByID(objectID string) DiceRoll {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("post : %+v\n", tempDiceRoll)
-
 	return tempDiceRoll
 }
 
-func insertDiceRoll(dieList DiceRoll) {
+func InsertDiceRoll(dieList DiceRoll) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -74,6 +70,6 @@ func insertDiceRoll(dieList DiceRoll) {
 		res.InsertedID.(primitive.ObjectID).Hex(),
 	)
 
-	getDiceRollByID(res.InsertedID.(primitive.ObjectID).Hex())
+	GetDiceRollByID(res.InsertedID.(primitive.ObjectID).Hex())
 
 }

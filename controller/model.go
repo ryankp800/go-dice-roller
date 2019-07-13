@@ -1,4 +1,4 @@
-package api
+package controller
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -19,13 +19,6 @@ type DiceRoll struct {
 	OverallRollValue int                `json:"overallRollResult,omitempty"`
 }
 
-//Message Define our message object
-type Message struct {
-	Email    string `json:"email,omitempty"`
-	Username string `json:"username,omitempty"`
-	Message  string `json:"message,omitempty"`
-}
-
 //InitiativeRoll a single PC initiative roll within a battle
 type InitiativeRoll struct {
 	Name            string `json:"name,omitempty"`
@@ -39,4 +32,20 @@ type InitiativeRoll struct {
 type Battle struct {
 	Characters []InitiativeRoll `json:"participants,omitempty"`
 	IsComplete bool             `json:"is_complete,omitempty"`
+}
+
+type User struct {
+	Username  string `json:"username"`
+	Password  string `json:"password,omitempty"`
+	Token     string `json:"token,omitempty"`
+}
+
+type ResponseResult struct {
+	Error  string `json:"error"`
+	Result string `json:"result"`
+}
+
+type DiceResponse struct {
+	DiceRoll DiceRoll  `json:"dice_roll"`
+	User User `json:"user"`
 }

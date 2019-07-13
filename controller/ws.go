@@ -1,14 +1,16 @@
-package api
+package controller
 
 import (
 	"log"
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
 )
 
 var clients = make(map[*websocket.Conn]bool) // connected clients
 var broadcast = make(chan Battle)            // broadcast channel
+var BroadcastRolls = make(chan DiceResponse)
 
 var currentBattle Battle
 
@@ -19,8 +21,8 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-//HandleConnections will handle incoming connections
-func HandleConnections(w http.ResponseWriter, r *http.Request) {
+// HandleConnections will handle incoming connections
+var HandleConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -30,11 +32,19 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 	defer ws.Close()
 	clients[ws] = true
 
+	user := r.Context().Value("user")
+	k, _ := user.(*jwt.Token).Claims.(jwt.MapClaims)
+	username := k["username"].(string)
+
+
 	for {
-		var msg InitiativeRoll
+		var initiativeRoll InitiativeRoll
+		initiativeRoll.Name = username
 		// Read in a new message as JSON and map it to a Message object
-		err := ws.ReadJSON(&msg)
-		rollForInitiative(msg, &currentBattle)
+		err := ws.ReadJSON(&initiativeRoll)
+		rollForInitiative(initiativeRoll, &currentBattle)
+
+		log.Println(initiativeRoll)
 
 		if err != nil {
 			log.Printf("error: %v", err)
@@ -45,7 +55,7 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 		log.Println(currentBattle)
 		broadcast <- currentBattle
 	}
-}
+})
 
 func rollForInitiative(roll InitiativeRoll, battle *Battle) {
 
@@ -57,24 +67,7 @@ func rollForInitiative(roll InitiativeRoll, battle *Battle) {
 	battle.Characters = append(battle.Characters, roll)
 }
 
-//HandleMessages will handle input messages from the ws
-func HandleMessages() {
-	for {
-		// grab next message from the broadcast channel
-		msg := <-broadcast
-		// send it out to every client that is currently connected
-		for client := range clients {
-			err := client.WriteJSON(msg)
-			if err != nil {
-				log.Printf("error: %v", err)
-				client.Close()
-				delete(clients, client)
-			}
-		}
-	}
-}
-
-//HandleInitiative websocket to handle the intiative roller
+// HandleInitiative websocket to handle the initiative rolls
 func HandleInitiative() {
 	for {
 		// grab next message from the broadcast channel
@@ -94,4 +87,22 @@ func HandleInitiative() {
 
 func resetBattle() {
 	currentBattle = Battle{}
+}
+
+func BroadcastRoll() {
+	for {
+		// grab next message from the broadcast channel
+		msg := <-BroadcastRolls
+		// send it out to every client that is currently connected
+		for client := range clients {
+			log.Println("my roll", msg)
+			err := client.WriteJSON(msg)
+			if err != nil {
+				log.Printf("error: %v", err)
+				client.Close()
+				delete(clients, client)
+			}
+		}
+	}
+
 }
