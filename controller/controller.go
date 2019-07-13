@@ -12,6 +12,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/ocsp"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
@@ -84,7 +85,8 @@ var RollDiceWithSecurityHandler = http.HandlerFunc(func(w http.ResponseWriter, r
 	// Marshal the list
 	data, err := json.Marshal(diceResponse);
 	if err != nil {
-		log.Fatalf("JSON marshalling failed: %s", err)
+		log.Printf("JSON marshalling failed: %s", err)
+		return
 	}
 
 	// Send dice roll to channel to be sent over ws
@@ -94,7 +96,8 @@ var RollDiceWithSecurityHandler = http.HandlerFunc(func(w http.ResponseWriter, r
 	_, err = w.Write(data);
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Fatalf("Could not parse die data %s", err)
+		log.Printf("Could not parse die data %s", err)
+		return
 	}
 })
 
@@ -208,13 +211,15 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(body, &user)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		w.WriteHeader(http.StatusForbidden)
 	}
 
 	collection, err := GetDBCollection()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		w.WriteHeader(http.StatusForbidden)
 	}
 	var result User
 	var res ResponseResult

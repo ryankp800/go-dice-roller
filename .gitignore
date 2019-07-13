@@ -1,3 +1,10 @@
 node_modules
 main.exe
 api/json.json
+.idea/codeStyles/codeStyleConfig.xml
+.idea/go-dice-roller.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
+json.json

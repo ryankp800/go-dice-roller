@@ -25,7 +25,8 @@ var upgrader = websocket.Upgrader{
 var HandleConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		w.WriteHeader(http.StatusForbidden)
 	}
 	log.Println("connected!")
 	// ensure connection close when function returns
