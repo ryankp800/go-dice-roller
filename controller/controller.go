@@ -12,7 +12,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/crypto/ocsp"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
