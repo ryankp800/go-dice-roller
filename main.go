@@ -7,8 +7,8 @@ import (
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 
 	"github.com/ryankp800/golang-dice-roller/controller"
 )
@@ -17,8 +17,11 @@ func main() {
 	fmt.Println("Starting the application...")
 	controller.ConfigMongo()
 
-	//TODO figure out what the host will be
-	corsObj := handlers.AllowedOrigins([]string{"*"})
+
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"}, // All origins
+		AllowedMethods: []string{"*"}, // Allowing only get, just an example
+	})
 
 	r := routes()
 
@@ -26,7 +29,7 @@ func main() {
 	go controller.BroadcastRoll()
 
 	// Apply the CORS middleware to our top-level router, with the defaults.
-	http.ListenAndServe(getPort(), handlers.CORS(corsObj)(r))
+	http.ListenAndServe(getPort(), c.Handler(r))
 }
 
 func routes() *mux.Router {
