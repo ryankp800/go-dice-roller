@@ -29,6 +29,6 @@ func GetDBCollection() (*mongo.Collection, error) {
 	if err != nil {
 		return nil, err
 	}
-	collection := client.Database("diceroller").Collection("users")
+	collection := client.Database("heroku_qkwm7vgb").Collection("users")
 	return collection, nil
 }

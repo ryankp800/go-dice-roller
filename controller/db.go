@@ -39,7 +39,7 @@ func ConfigMongo() {
 
 	fmt.Println("Connected to MongoDB!")
 
-	Collection = client.Database("diceroller").Collection("rolls")
+	Collection = client.Database("heroku_qkwm7vgb").Collection("rolls")
 }
 
 func GetDiceRollByID(objectID string) DiceRoll {
