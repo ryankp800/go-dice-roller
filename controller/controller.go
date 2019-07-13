@@ -20,6 +20,7 @@ import (
 
 // HelloWorldHandler hello world
 func HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -33,6 +34,7 @@ func HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
 
 // ResetBattleHandler clears battle object
 func ResetBattleHandler(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
 	resetBattle()
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
@@ -44,6 +46,7 @@ func ResetBattleHandler(w http.ResponseWriter, r *http.Request) {
 // GetRollHandler gets a roll from the database based on the object ID
 func GetRollHandler(w http.ResponseWriter,
 	r *http.Request) {
+	setupResponse(&w, r)
 	params := mux.Vars(r)
 	id := params["id"]
 
@@ -55,6 +58,7 @@ func GetRollHandler(w http.ResponseWriter,
 }
 
 var RollDiceWithSecurityHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+	setupResponse(&w, r)
 	var diceResponse DiceResponse
 	user := r.Context().Value("user")
 	k, _ := user.(*jwt.Token).Claims.(jwt.MapClaims)
@@ -149,7 +153,7 @@ func extractDieList(valueList []string, re *regexp.Regexp) DiceRoll {
 }
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-
+	setupResponse(&w, r)
 	w.Header().Set("Content-Type", "application/json")
 	var user User
 	body, _ := ioutil.ReadAll(r.Body)
@@ -204,7 +208,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-
+	setupResponse(&w, r)
 	w.Header().Set("Content-Type", "application/json")
 	var user User
 	body, _ := ioutil.ReadAll(r.Body)
@@ -259,6 +263,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
 	w.Header().Set("Content-Type", "application/json")
 	tokenString := r.Header.Get("Authorization")
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -281,4 +286,10 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+func setupResponse(w *http.ResponseWriter, req *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
