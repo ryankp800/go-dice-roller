@@ -66,6 +66,13 @@ func rollForInitiative(roll InitiativeRoll, battle *Battle) {
 	roll.FinalValue = die.RollValue + roll.Modifier
 
 	battle.Characters = append(battle.Characters, roll)
+
+	UpdateOrder(*battle)
+}
+
+// EndTurn will end the current turn and increment order
+func EndTurn() {
+	broadcast <- IncrementOrder(currentBattle)
 }
 
 // HandleInitiative websocket to handle the initiative rolls

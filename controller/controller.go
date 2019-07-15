@@ -57,7 +57,7 @@ func GetRollHandler(w http.ResponseWriter,
 
 }
 
-var RollDiceWithSecurityHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+var RollDiceHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
 	setupResponse(&w, r)
 	var diceResponse DiceResponse
 	user := r.Context().Value("user")
@@ -133,7 +133,7 @@ func extractDieList(valueList []string, re *regexp.Regexp) DiceRoll {
 		// Check if there are greater than 0 dice
 		if numOfDie, err := strconv.Atoi(me[0]); err == nil {
 
-			// For each die of that vlaue being rolled create a die object
+			// For each die of that value being rolled create a die object
 			for j := 0; j < numOfDie; j++ {
 
 				// Convert the Value string to an int
@@ -168,6 +168,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	collection, err := GetDBCollection()
 
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		res.Error = err.Error()
 		json.NewEncoder(w).Encode(res)
 		return
@@ -180,6 +181,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 5)
 
 			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
 				res.Error = "Error While Hashing Password, Try Again"
 				json.NewEncoder(w).Encode(res)
 				return
@@ -188,6 +190,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 			_, err = collection.InsertOne(context.TODO(), user)
 			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
 				res.Error = "Error While Creating User, Try Again"
 				json.NewEncoder(w).Encode(res)
 				return
@@ -196,7 +199,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(res)
 			return
 		}
-
+		w.WriteHeader(http.StatusInternalServerError)
 		res.Error = err.Error()
 		json.NewEncoder(w).Encode(res)
 		return
@@ -230,6 +233,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	err = collection.FindOne(context.TODO(), bson.D{{"username", user.Username}}).Decode(&result)
 
 	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
 		res.Error = "Invalid username"
 		json.NewEncoder(w).Encode(res)
 		return
@@ -238,6 +242,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	err = bcrypt.CompareHashAndPassword([]byte(result.Password), []byte(user.Password))
 
 	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
 		res.Error = "Invalid password"
 		json.NewEncoder(w).Encode(res)
 		return
@@ -250,6 +255,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	tokenString, err := token.SignedString([]byte("secret"))
 
 	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
 		res.Error = "Error while generating token,Try again"
 		json.NewEncoder(w).Encode(res)
 		return
@@ -288,7 +294,13 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+var EndTurnHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+	setupResponse(&w, r)
+	EndTurn()
+})
+
 func setupResponse(w *http.ResponseWriter, req *http.Request) {
+	(*w).Header().Set("Content-Type", "application/json")
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")

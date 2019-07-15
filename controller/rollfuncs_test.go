@@ -7,7 +7,7 @@ import (
 func TestRollDie(t *testing.T) {
 	die := Dice{DiceValue: 20, Rolled: false}
 
-	for i := 0; i < 1000; i ++ {
+	for i := 0; i < 1000; i++ {
 		RollDie(&die)
 
 		if die.Rolled != true {
@@ -23,15 +23,15 @@ func TestRollDie(t *testing.T) {
 func TestRoll(t *testing.T) {
 	dieRoll := DiceRoll{
 		DiceList: []Dice{
-			{DiceValue:20},
-			{DiceValue:12},
-			{DiceValue:10},
-			{DiceValue:8},
-			{DiceValue:6},
-			{DiceValue:4}},
-	OverallRollValue:0}
+			{DiceValue: 20},
+			{DiceValue: 12},
+			{DiceValue: 10},
+			{DiceValue: 8},
+			{DiceValue: 6},
+			{DiceValue: 4}},
+		OverallRollValue: 0}
 
-	for i :=0; i < 1000 ; i++  {
+	for i := 0; i < 1000; i++ {
 		Roll(&dieRoll)
 
 		if dieRoll.OverallRollValue == 0 {
@@ -51,4 +51,40 @@ func TestRoll(t *testing.T) {
 
 }
 
+func TestUpdateOrder(t *testing.T) {
+	battle := Battle{
+		Characters: []InitiativeRoll{
+			{Name: "first", Modifier: 0, FinalValue: 20},
+			{Name: "second", Modifier: 0, FinalValue: 19},
+			{Name: "first", Modifier: 0, FinalValue: 18},
+			{Name: "first", Modifier: 0, FinalValue: 17}},
+	}
+
+	battle = UpdateOrder(battle)
+
+	// if battle.Characters[1].Order != 1 	|| battle.Characters[1].Order != 2 	|| battle.Characters[1].Order != 3 	|| battle.Characters[1].Order != 4 {
+	// 	t.Errorf("Battle order was not updated %v", battle)
+	// }
+
+
+}
+
+
+func TestIncrimentOrder(t *testing.T) {
+	battle := Battle{
+		Characters: []InitiativeRoll{
+			{Name: "first", Modifier: 0, FinalValue: 20, Order: 0},
+			{Name: "second", Modifier: 0, FinalValue: 19, Order: 1},
+			{Name: "third", Modifier: 0, FinalValue: 18, Order: 2},
+			{Name: "fourth", Modifier: 0, FinalValue: 17, Order: 3}},
+	}
+
+	battle = IncrementOrder(battle)
+
+	// if battle.Characters[1].Order != 1 	|| battle.Characters[1].Order != 2 	|| battle.Characters[1].Order != 3 	|| battle.Characters[1].Order != 4 {
+	// 	t.Errorf("Battle order was not updated %v", battle)
+	// }
+
+
+}
 
