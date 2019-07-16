@@ -165,7 +165,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	collection, err := GetDBCollection()
+	collection, err := GetUsersCollection()
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -221,7 +221,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 	}
 
-	collection, err := GetDBCollection()
+	collection, err := GetUsersCollection()
 
 	if err != nil {
 		log.Print(err)

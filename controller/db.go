@@ -13,18 +13,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-//Client public mongo client
+// Client public mongo client
 var Client *mongo.Client
 
-//Collection dice roller collection
-var Collection *mongo.Collection
+// DiceCollection dice roller collection
+var DiceCollection *mongo.Collection
 
-//ConfigMongo sets up database
+// UserCollection dice roller collection
+var UserCollection *mongo.Collection
+
+// ConfigMongo sets up database
 func ConfigMongo() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	// _ = os.Setenv("MONGODB_URI", "mongodb://localhost:27017")
-	//mongodb://heroku_qkwm7vgb:tqug715ledj81r2gs24ajqj4kj@ds213255.mlab.com:13255/heroku_qkwm7vgb
+	// mongodb://heroku_qkwm7vgb:tqug715ledj81r2gs24ajqj4kj@ds213255.mlab.com:13255/heroku_qkwm7vgb
 
 	clientOptions := options.Client().ApplyURI(os.Getenv("MONGODB_URI"))
 
@@ -39,7 +42,7 @@ func ConfigMongo() {
 
 	fmt.Println("Connected to MongoDB!")
 
-	Collection = client.Database("heroku_qkwm7vgb").Collection("rolls")
+	DiceCollection = client.Database("heroku_qkwm7vgb").Collection("rolls")
 }
 
 func GetDiceRollByID(objectID string) DiceRoll {
@@ -49,7 +52,7 @@ func GetDiceRollByID(objectID string) DiceRoll {
 	defer cancel()
 
 	var tempDiceRoll DiceRoll
-	if err := Collection.FindOne(ctx, bson.M{"_id": id}).Decode(&tempDiceRoll); err != nil {
+	if err := DiceCollection.FindOne(ctx, bson.M{"_id": id}).Decode(&tempDiceRoll); err != nil {
 		log.Fatal(err)
 	}
 
@@ -60,7 +63,7 @@ func InsertDiceRoll(dieList DiceRoll) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	res, err := Collection.InsertOne(ctx, dieList)
+	res, err := DiceCollection.InsertOne(ctx, dieList)
 
 	if err != nil {
 		log.Fatal(err)
@@ -72,4 +75,9 @@ func InsertDiceRoll(dieList DiceRoll) {
 
 	GetDiceRollByID(res.InsertedID.(primitive.ObjectID).Hex())
 
+}
+
+func GetUsersCollection() (*mongo.Collection, error) {
+	UserCollection = Client.Database("heroku_qkwm7vgb").Collection("users")
+	return UserCollection, nil
 }
