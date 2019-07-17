@@ -22,16 +22,21 @@ var DiceCollection *mongo.Collection
 // UserCollection dice roller collection
 var UserCollection *mongo.Collection
 
+var database = "heroku_qkwm7vgb"
+
 // ConfigMongo sets up database
 func ConfigMongo() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	// _ = os.Setenv("MONGODB_URI", "mongodb://localhost:27017")
-	// mongodb://heroku_qkwm7vgb:tqug715ledj81r2gs24ajqj4kj@ds213255.mlab.com:13255/heroku_qkwm7vgb
 
-	clientOptions := options.Client().ApplyURI(os.Getenv("MONGODB_URI"))
+	url := os.Getenv("MONGODB_URI")
 
-	// clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	if url == "" {
+		url  =  "mongodb://localhost:27017"
+	}
+
+	clientOptions := options.Client().ApplyURI(url)
+
 	client, err := mongo.Connect(ctx, clientOptions); if err != nil {
 		log.Fatal("this", err)
 	}
@@ -42,7 +47,8 @@ func ConfigMongo() {
 
 	fmt.Println("Connected to MongoDB!")
 
-	DiceCollection = client.Database("heroku_qkwm7vgb").Collection("rolls")
+	DiceCollection = client.Database(database).Collection("rolls")
+	UserCollection = client.Database(database).Collection("users")
 }
 
 func GetDiceRollByID(objectID string) DiceRoll {
@@ -59,7 +65,7 @@ func GetDiceRollByID(objectID string) DiceRoll {
 	return tempDiceRoll
 }
 
-func InsertDiceRoll(dieList DiceRoll) {
+func insertDiceRoll(dieList DiceRoll) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -75,9 +81,4 @@ func InsertDiceRoll(dieList DiceRoll) {
 
 	GetDiceRollByID(res.InsertedID.(primitive.ObjectID).Hex())
 
-}
-
-func GetUsersCollection() (*mongo.Collection, error) {
-	UserCollection = Client.Database("heroku_qkwm7vgb").Collection("users")
-	return UserCollection, nil
 }

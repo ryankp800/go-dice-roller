@@ -47,7 +47,7 @@ func routes() *mux.Router {
 
 
 	r.HandleFunc("/health", controller.HelloWorldHandler).Methods("GET")
-	r.Handle("/ws", jwtMiddleware.Handler(controller.HandleConnections))
+	r.Handle("/ws", controller.HandleConnections)
 	r.Handle("/roll", jwtMiddleware.Handler(controller.RollDiceHandler))
 	r.Handle("/end", jwtMiddleware.Handler(controller.EndTurnHandler)).Methods("GET")
 	r.HandleFunc("/reset", controller.ResetBattleHandler)

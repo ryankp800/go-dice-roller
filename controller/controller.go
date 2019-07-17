@@ -21,7 +21,6 @@ import (
 // HelloWorldHandler hello world
 func HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
 	err := json.NewEncoder(w).Encode(`{"hello": "there"}`)
@@ -32,16 +31,7 @@ func HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ResetBattleHandler clears battle object
-func ResetBattleHandler(w http.ResponseWriter, r *http.Request) {
-	setupResponse(&w, r)
-	resetBattle()
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
 
-	json.NewEncoder(w).Encode(`{"battleReset": true}`)
-
-}
 
 // GetRollHandler gets a roll from the database based on the object ID
 func GetRollHandler(w http.ResponseWriter,
@@ -51,7 +41,6 @@ func GetRollHandler(w http.ResponseWriter,
 	id := params["id"]
 
 	roll := GetDiceRollByID(id)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(roll)
 
@@ -64,8 +53,6 @@ var RollDiceHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 	k, _ := user.(*jwt.Token).Claims.(jwt.MapClaims)
 			diceResponse.User.Username = k["username"].(string)
 
-
-	w.Header().Set("Content-Type", "application/json")
 
 	// Get the dice value list from the rul
 	queryVariableMap := r.URL.Query()
@@ -81,7 +68,7 @@ var RollDiceHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 	Roll(&dieList)
 	dieList.ID = primitive.NewObjectID()
 
-	InsertDiceRoll(dieList)
+	insertDiceRoll(dieList)
 
 	diceResponse.DiceRoll = dieList
 
@@ -154,7 +141,7 @@ func extractDieList(valueList []string, re *regexp.Regexp) DiceRoll {
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
-	w.Header().Set("Content-Type", "application/json")
+
 	var user User
 	body, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(body, &user)
@@ -165,8 +152,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	collection, err := GetUsersCollection()
-
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res.Error = err.Error()
@@ -174,7 +159,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var result User
-	err = collection.FindOne(context.TODO(), bson.D{{"username", user.Username}}).Decode(&result)
+	err = UserCollection.FindOne(context.TODO(), bson.D{{"username", user.Username}}).Decode(&result)
 
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
@@ -188,7 +173,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			user.Password = string(hash)
 
-			_, err = collection.InsertOne(context.TODO(), user)
+			_, err =  UserCollection.InsertOne(context.TODO(), user)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				res.Error = "Error While Creating User, Try Again"
@@ -212,7 +197,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
-	w.Header().Set("Content-Type", "application/json")
+
 	var user User
 	body, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(body, &user)
@@ -221,16 +206,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 	}
 
-	collection, err := GetUsersCollection()
-
-	if err != nil {
-		log.Print(err)
-		w.WriteHeader(http.StatusForbidden)
-	}
 	var result User
 	var res ResponseResult
 
-	err = collection.FindOne(context.TODO(), bson.D{{"username", user.Username}}).Decode(&result)
+	err = UserCollection.FindOne(context.TODO(), bson.D{{"username", user.Username}}).Decode(&result)
 
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
@@ -270,7 +249,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
-	w.Header().Set("Content-Type", "application/json")
+
 	tokenString := r.Header.Get("Authorization")
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
@@ -296,7 +275,23 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 var EndTurnHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
 	setupResponse(&w, r)
-	EndTurn()
+	endTurn()
+	json.NewEncoder(w).Encode(`{"turnEnded": true}`)
+})
+
+var StartBattleHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+	setupResponse(&w, r)
+	startBattle()
+	json.NewEncoder(w).Encode(`{"battleStarted": true}`)
+})
+
+// ResetBattleHandler clears battle object
+var ResetBattleHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
+
+	resetBattle()
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(`{"battleReset": true}`)
 })
 
 func setupResponse(w *http.ResponseWriter, req *http.Request) {

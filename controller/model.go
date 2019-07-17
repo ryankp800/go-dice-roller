@@ -27,12 +27,13 @@ type InitiativeRoll struct {
 	Modifier        int    `json:"modifier,omitempty"`
 	FinalValue      int    `json:"final_value,omitempty"`
 	Order           int    `json:"order"`
+	Owner			string `json:"owner,omitempty"`
 }
 
 // Battle object that structures the current fight
 type Battle struct {
 	Characters []InitiativeRoll `json:"participants,omitempty"`
-	IsComplete bool             `json:"is_complete,omitempty"`
+	InProgress bool `json:"inProgress"`
 }
 
 type User struct {

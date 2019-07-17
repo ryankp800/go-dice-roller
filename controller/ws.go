@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
 )
 
@@ -33,46 +32,51 @@ var HandleConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	defer ws.Close()
 	clients[ws] = true
 
-	user := r.Context().Value("user")
-	k, _ := user.(*jwt.Token).Claims.(jwt.MapClaims)
-	username := k["username"].(string)
-
-
+	// user := r.Context().Value("user")
+	// k, _ := user.(*jwt.Token).Claims.(jwt.MapClaims)
+	// username := k["username"].(string)
+	username := "joe"
 	for {
 		var initiativeRoll InitiativeRoll
-		initiativeRoll.Name = username
-		// Read in a new message as JSON and map it to a Message object
 		err := ws.ReadJSON(&initiativeRoll)
-		rollForInitiative(initiativeRoll, &currentBattle)
+		// Read in a new message as JSON and map it to a Message object
 
-		log.Println(initiativeRoll)
+		// If name is empty set username as name
+		if initiativeRoll.Name == "" {
+			initiativeRoll.Name = username
+		}
+		// For NPC set the owner as the user who inputs the roll
+		initiativeRoll.Owner = username
+
+		rollForInitiative(initiativeRoll, &currentBattle)
 
 		if err != nil {
 			log.Printf("error: %v", err)
 			delete(clients, ws)
-			break
+
 		}
 		// send the new message to the broadcast channel
-		log.Println(currentBattle)
 		broadcast <- currentBattle
 	}
 })
 
-func rollForInitiative(roll InitiativeRoll, battle *Battle) {
+// StartBattle handles the initial set up of a new encounter
+func StartBattle(r *http.Request, ws *websocket.Conn) {
 
-	die := Dice{DiceValue: 20}
-	RollDie(&die)
 
-	roll.FinalValue = die.RollValue + roll.Modifier
-
-	battle.Characters = append(battle.Characters, roll)
-
-	UpdateOrder(*battle)
 }
 
-// EndTurn will end the current turn and increment order
-func EndTurn() {
+// endTurn will end the current turn and increment order
+func endTurn() {
 	broadcast <- IncrementOrder(currentBattle)
+}
+
+func resetBattle() {
+	currentBattle = Battle{InProgress:false}
+}
+
+func startBattle() {
+	currentBattle.InProgress = true
 }
 
 // HandleInitiative websocket to handle the initiative rolls
@@ -82,10 +86,11 @@ func HandleInitiative() {
 		msg := <-broadcast
 		// send it out to every client that is currently connected
 		for client := range clients {
-			log.Println("my battle", msg)
 			err := client.WriteJSON(msg)
 			if err != nil {
 				log.Printf("error: %v", err)
+
+				// TODO I dont think we want to close the client in this situation
 				client.Close()
 				delete(clients, client)
 			}
@@ -93,20 +98,18 @@ func HandleInitiative() {
 	}
 }
 
-func resetBattle() {
-	currentBattle = Battle{}
-}
-
+// BroadcastRoll sends new rolls to the channel and broadcasts to the websocket
 func BroadcastRoll() {
 	for {
 		// grab next message from the broadcast channel
 		msg := <-BroadcastRolls
 		// send it out to every client that is currently connected
 		for client := range clients {
-			log.Println("my roll", msg)
 			err := client.WriteJSON(msg)
 			if err != nil {
 				log.Printf("error: %v", err)
+
+				// TODO I dont think we want to close the client in this situation
 				client.Close()
 				delete(clients, client)
 			}

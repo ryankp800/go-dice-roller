@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"testing"
 )
 
@@ -56,6 +57,7 @@ func TestUpdateOrder(t *testing.T) {
 		Characters: []InitiativeRoll{
 			{Name: "first", Modifier: 0, FinalValue: 20},
 			{Name: "second", Modifier: 0, FinalValue: 19},
+			{Name: "fifth", Modifier: 0, FinalValue: 4},
 			{Name: "first", Modifier: 0, FinalValue: 18},
 			{Name: "first", Modifier: 0, FinalValue: 17}},
 	}
@@ -66,6 +68,9 @@ func TestUpdateOrder(t *testing.T) {
 	// 	t.Errorf("Battle order was not updated %v", battle)
 	// }
 
+	for _, roll := range battle.Characters {
+		log.Printf("finalValue %v, order %v", roll.FinalValue, roll.Order)
+	}
 
 }
 
