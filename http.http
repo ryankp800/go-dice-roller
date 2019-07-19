@@ -1,0 +1,59 @@
+POST https://go-dice-roller.herokuapp.com/register
+
+{
+    "username": "testUser",
+    "password": "password"
+}
+
+# HTTP/1.1 200 OK
+# Server: Cowboy
+# Connection: close
+# Content-Type: application/json
+# Date: Sat, 13 Jul 2019 22:05:16 GMT
+# Content-Length: 48
+# Via: 1.1 vegur
+
+# {
+#   "error": "",
+#   "result": "Registration Successful"
+# }
+###
+
+POST https://go-dice-roller.herokuapp.com/login
+
+{
+    "username": "testUser",
+    "password": "password"
+}
+
+###
+  "username": "testUser",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RVc2VyIn0.r43pDqPhof7ChNH_XOyN3-l5fQewTux9M4zAQzvUoaw"
+}
+###
+
+GET https://go-dice-roller.herokuapp.com/roll?value=1d20
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RVc2VyIn0.r43pDqPhof7ChNH_XOyN3-l5fQewTux9M4zAQzvUoaw`
+
+
+{
+  "dice_roll": {
+    "id": "5d2a563538baa00611f4bc79",
+    "diceList": [
+      {
+        "id": 1,
+        "dValue": 20,
+        "rolled": true,
+        "rollValue": 8
+      }
+    ],
+    "overallRollResult": 8
+  },
+  "user": {
+    "username": "testUser"
+  }
+}
+
+###
+
+

@@ -8,3 +8,4 @@ api/json.json
 .idea/vcs.xml
 .idea/workspace.xml
 json.json
+*.json

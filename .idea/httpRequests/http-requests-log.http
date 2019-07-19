@@ -1,0 +1,101 @@
+GET https://go-dice-roller.herokuapp.com/roll?value=1d20
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RVc2VyIn0.r43pDqPhof7ChNH_XOyN3-l5fQewTux9M4zAQzvUoaw
+
+{
+  "dice_roll": {
+    "id": "5d2a563538baa00611f4bc79",
+    "diceList": [
+      {
+        "id": 1,
+        "dValue": 20,
+        "rolled": true,
+        "rollValue": 8
+      }
+    ],
+    "overallRollResult": 8
+  },
+  "user": {
+    "username": "testUser"
+  }
+}
+
+<> 2019-07-15T045527.200.json
+
+###
+
+POST https://go-dice-roller.herokuapp.com/login
+
+{
+    "username": "testUser",
+    "password": "password"
+}
+
+<> 2019-07-15T045512.200.json
+
+###
+
+POST https://go-dice-roller.herokuapp.com/login
+
+{
+    "username": "testUser",
+    "password": "password"
+}
+
+{
+
+<> 2019-07-15T045456.403.json
+
+###
+
+POST https://go-dice-roller.herokuapp.com/login
+
+{
+    "username": "grimm",
+    "password": "shark"
+}
+
+{
+
+<> 2019-07-15T045442.403.json
+
+###
+
+POST https://go-dice-roller.herokuapp.com/login
+
+{
+    "username": "kp800",
+    "password": "password"
+}
+
+{
+
+<> 2019-07-15T045428.403.json
+
+###
+
+POST https://go-dice-roller.herokuapp.com/login
+
+{
+    "username": "ryankp800",
+    "password": "password"
+}
+
+{
+
+<> 2019-07-15T045418.403.json
+
+###
+
+POST https://go-dice-roller.herokuapp.com/login
+
+{
+    "username": "testUser",
+    "password": "password"
+}
+
+{
+
+<> 2019-07-15T045409.403.json
+
+###
+

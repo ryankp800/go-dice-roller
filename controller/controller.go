@@ -73,7 +73,7 @@ var RollDiceHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 	diceResponse.DiceRoll = dieList
 
 	// Marshal the list
-	data, err := json.Marshal(diceResponse);
+	data, err := json.Marshal(diceResponse)
 	if err != nil {
 		log.Printf("JSON marshalling failed: %s", err)
 		return
@@ -82,8 +82,9 @@ var RollDiceHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 	// Send dice roll to channel to be sent over ws
 	BroadcastRolls <- diceResponse
 
+
 	// Write to the response
-	_, err = w.Write(data);
+	_, err = w.Write(data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("Could not parse die data %s", err)

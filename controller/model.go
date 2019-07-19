@@ -51,3 +51,7 @@ type DiceResponse struct {
 	DiceRoll DiceRoll `json:"dice_roll"`
 	User     User     `json:"user"`
 }
+
+type RollRequest struct {
+	ValString []string `json:"roll"`
+}

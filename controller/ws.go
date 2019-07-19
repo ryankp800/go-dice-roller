@@ -3,11 +3,14 @@ package controller
 import (
 	"log"
 	"net/http"
+	"regexp"
 
 	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var clients = make(map[*websocket.Conn]bool) // connected clients
+var rollClients = make(map[*websocket.Conn]bool)
 var broadcast = make(chan Battle)            // broadcast channel
 var BroadcastRolls = make(chan DiceResponse)
 
@@ -20,8 +23,8 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// HandleConnections will handle incoming connections
-var HandleConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// HandleInitConnections will handle incoming connections
+var HandleInitConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print(err)
@@ -35,28 +38,74 @@ var HandleConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	// user := r.Context().Value("user")
 	// k, _ := user.(*jwt.Token).Claims.(jwt.MapClaims)
 	// username := k["username"].(string)
-	username := "joe"
+	var initiativeRoll InitiativeRoll
 	for {
-		var initiativeRoll InitiativeRoll
+
 		err := ws.ReadJSON(&initiativeRoll)
 		// Read in a new message as JSON and map it to a Message object
 
 		// If name is empty set username as name
-		if initiativeRoll.Name == "" {
-			initiativeRoll.Name = username
-		}
+		// if initiativeRoll.Name == "" {
+		// 	initiativeRoll.Name = username
+		// }
 		// For NPC set the owner as the user who inputs the roll
-		initiativeRoll.Owner = username
+		// initiativeRoll.Owner = username
+		if initiativeRoll.Name != "" {
+			rollForInitiative(initiativeRoll, &currentBattle)
+		}
 
-		rollForInitiative(initiativeRoll, &currentBattle)
 
 		if err != nil {
 			log.Printf("error: %v", err)
 			delete(clients, ws)
 
+		} else if initiativeRoll.Name != "" {
+			// send the new message to the broadcast channel
+			broadcast <- currentBattle
 		}
-		// send the new message to the broadcast channel
-		broadcast <- currentBattle
+	}
+})
+
+var HandleConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusForbidden)
+	}
+	log.Println(" connected to dice handler!")
+	// ensure connection close when function returns
+	defer ws.Close()
+	rollClients[ws] = true
+	//
+	// user := r.Context().Value("user")
+	// k, _ := user.(*jwt.Token).Claims.(jwt.MapClaims)
+	// username := k["username"].(string)
+	for {
+		var diceResponse DiceResponse
+		var valueList RollRequest
+		err := ws.ReadJSON(&valueList)
+
+		re := regexp.MustCompile("[Dd]")
+		dieList := extractDieList(valueList.ValString, re)
+
+		// Roll the completed dielist
+		Roll(&dieList)
+		dieList.ID = primitive.NewObjectID()
+
+		insertDiceRoll(dieList)
+
+		diceResponse.User.Username, diceResponse.DiceRoll = "fake", dieList
+
+
+
+		if err != nil {
+			log.Printf("error: %v", err)
+			delete(rollClients, ws)
+
+		} else {
+			// send the new message to the broadcast channel
+			BroadcastRolls <- diceResponse
+		}
 	}
 })
 
@@ -104,7 +153,7 @@ func BroadcastRoll() {
 		// grab next message from the broadcast channel
 		msg := <-BroadcastRolls
 		// send it out to every client that is currently connected
-		for client := range clients {
+		for client := range rollClients {
 			err := client.WriteJSON(msg)
 			if err != nil {
 				log.Printf("error: %v", err)
