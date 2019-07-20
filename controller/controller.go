@@ -153,7 +153,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(res)
 		return
 	}
-	
+
 	var result User
 	err = UserCollection.FindOne(context.TODO(), bson.D{{"username", user.Username}}).Decode(&result)
 
