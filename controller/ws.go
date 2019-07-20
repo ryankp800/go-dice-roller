@@ -25,61 +25,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// HandleInitConnections will handle incoming connections
-var HandleInitConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	ws, err := upgrader.Upgrade(w, r, nil)
 
-	// Get the dice value list from the rul
-	queryVariableMap := r.URL.Query()
-
-	// Get the value property and put it into an array
-	tokenString := queryVariableMap["token"][0]
-
-	username := extractClaims(tokenString)
-
-
-	if err != nil {
-		log.Print(err)
-		w.WriteHeader(http.StatusForbidden)
-	}
-	log.Println("connected!")
-	// ensure connection close when function returns
-	defer ws.Close()
-
-	clients[ws] = true
-
-	broadcast <- currentBattle
-
-	var initiativeRoll InitiativeRoll
-	for {
-	fmt.Println("Running through loop")
-		err := ws.ReadJSON(&initiativeRoll)
-		if err != nil {
-			log.Printf("error: %v", err)
-			delete(clients, ws)
-		}
-		// Read in a new message as JSON and map it to a Message object
-
-		// If name is empty set username as name
-		if initiativeRoll.Name == "" {
-			initiativeRoll.Name = username
-		}
-		// For NPC set the owner as the user who inputs the roll
-		// initiativeRoll.Owner = username
-		if initiativeRoll.Name != "no username"{
-			rollForInitiative(initiativeRoll, &currentBattle)
-		}
-
-		if err != nil {
-			log.Printf("error: %v", err)
-			delete(clients, ws)
-
-		} else if initiativeRoll.Name != "" {
-			// send the new message to the broadcast channel
-			broadcast <- currentBattle
-		}
-	}
-})
 
 func extractClaims(tokenString string) string {
 	claims := jwt.MapClaims{}
@@ -114,20 +60,16 @@ var HandleConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	defer ws.Close()
 	rollClients[ws] = true
 
-	// user := r.Context().Value("user")
-	// k, _ := user.(*jwt.Token).Claims.(jwt.MapClaims)
-	// username := k["username"].(string)
 	for {
-		fmt.Println("Dice roller loop")
+		log.Println("Dice roller loop")
 		var diceResponse DiceResponse
 		var valueList RollRequest
 		err := ws.ReadJSON(&valueList)
 		if err != nil {
+			log.Println("Dice roller loop ")
 			delete(rollClients, ws)
-		}
-	    // mt, msg, err := ws.ReadMessage()
-	    if err == nil {
-
+			break
+		} else {
 			re := regexp.MustCompile("[Dd]")
 			dieList := extractDieList(valueList.ValString, re)
 
@@ -138,14 +80,9 @@ var HandleConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 
 			diceResponse.User.Username, diceResponse.DiceRoll = "fake", dieList
 
-			if err != nil {
-				log.Printf("error: %v", err)
-				delete(rollClients, ws)
+			// send the new message to the broadcast channel
+			BroadcastRolls <- diceResponse
 
-			} else {
-				// send the new message to the broadcast channel
-				BroadcastRolls <- diceResponse
-			}
 		}
 	}
 })
@@ -168,22 +105,69 @@ func resetBattle() {
 func startBattle() {
 	currentBattle.InProgress = true
 }
+// HandleInitConnections will handle incoming connections
+var HandleInitConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ws, err := upgrader.Upgrade(w, r, nil)
+
+	// Get the token from the url
+	queryVariableMap := r.URL.Query()
+	tokenString := queryVariableMap["token"][0]
+	username := extractClaims(tokenString)
+
+	if err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusForbidden)
+	}
+	log.Println("connected!")
+	// ensure connection close when function returns
+	defer ws.Close()
+
+	clients[ws] = true
+
+	// Push existing data out on connection
+	broadcast <- currentBattle
+
+	var initiativeRoll InitiativeRoll
+	for {
+		fmt.Println("Running through loop")
+		err := ws.ReadJSON(&initiativeRoll)
+		if err != nil {
+			log.Printf("error: %v", err)
+			delete(clients, ws)
+			break
+		} else {
+			// Read in a new message as JSON and map it to a Message object
+
+			// If name is empty set username as name
+			if initiativeRoll.Name == "" {
+				initiativeRoll.Name = username
+			}
+
+			// For NPC set the owner as the user who inputs the roll
+			// initiativeRoll.Owner = username
+			rollForInitiative(initiativeRoll, &currentBattle)
+
+			broadcast <- currentBattle
+		}
+	}
+})
 
 // HandleInitiative websocket to handle the initiative rolls
 func HandleInitiative() {
+	log.Println("HandleInitiative() started")
 	for {
-		fmt.Println("handling init")
+		log.Println("HandleInitiative() looped")
 		// grab next message from the broadcast channel
 		msg := <-broadcast
 		// send it out to every client that is currently connected
-		for client := range clients {
-			fmt.Println("handling init --> sending")
+		log.Printf("clijents: %v", clients)
+		for  client := range clients {
+			// log.Println("handling init --> sending to client %v", client)
 			err := client.WriteJSON(msg)
 			if err != nil {
-				log.Printf("error: %v", err)
-
+				log.Printf("error: %v, client # %v", err)
 				// TODO I dont think we want to close the client in this situation
-				client.Close()
+				err = client.Close()
 				delete(clients, client)
 			}
 		}
@@ -192,7 +176,9 @@ func HandleInitiative() {
 
 // BroadcastRoll sends new rolls to the channel and broadcasts to the websocket
 func BroadcastRoll() {
+	log.Println("BroadcastRoll() started")
 	for {
+		log.Println("BroadcastRoll() looped")
 		// grab next message from the broadcast channel
 		msg := <-BroadcastRolls
 		// send it out to every client that is currently connected
