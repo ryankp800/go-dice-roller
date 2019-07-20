@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"sort"
@@ -34,7 +33,7 @@ func UpdateOrder(battle Battle) Battle {
 	for i := range battle.Characters {
 		battle.Characters[i].Order = i
 	}
-	fmt.Println(battle)
+	// fmt.Println(battle)
 
 	return battle
 }
@@ -76,7 +75,7 @@ func IncrementOrder(battle Battle) Battle {
 	}
 
 	sort.Sort(ByOrderValue(battle.Characters))
-	fmt.Println(battle)
+	// fmt.Println(battle)
 
 	return battle
 }

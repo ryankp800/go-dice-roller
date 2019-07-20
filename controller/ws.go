@@ -51,6 +51,10 @@ var HandleInitConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http
 	for {
 	fmt.Println("Running through loop")
 		err := ws.ReadJSON(&initiativeRoll)
+		if err != nil {
+			log.Printf("error: %v", err)
+			delete(clients, ws)
+		}
 		// Read in a new message as JSON and map it to a Message object
 
 		// If name is empty set username as name
@@ -115,8 +119,11 @@ var HandleConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 		var diceResponse DiceResponse
 		var valueList RollRequest
 		err := ws.ReadJSON(&valueList)
+		if err != nil {
+			delete(rollClients, ws)
+		}
 	    // mt, msg, err := ws.ReadMessage()
-	    if err != nil {
+	    if err == nil {
 
 			re := regexp.MustCompile("[Dd]")
 			dieList := extractDieList(valueList.ValString, re)
@@ -190,7 +197,6 @@ func BroadcastRoll() {
 			err := client.WriteJSON(msg)
 			if err != nil {
 				log.Printf("error: %v", err)
-
 				// TODO I dont think we want to close the client in this situation
 				client.Close()
 				delete(clients, client)
