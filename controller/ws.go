@@ -16,7 +16,7 @@ var rollClients = make(map[*websocket.Conn]bool)
 var broadcast = make(chan Battle)            // broadcast channel
 var BroadcastRolls = make(chan DiceResponse)
 
-var currentBattle Battle
+var currentBattle  = Battle{Characters: []InitiativeRoll{}}
 
 // Configure the upgrader
 var upgrader = websocket.Upgrader{

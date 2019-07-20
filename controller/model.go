@@ -32,7 +32,7 @@ type InitiativeRoll struct {
 
 // Battle object that structures the current fight
 type Battle struct {
-	Characters []InitiativeRoll `json:"participants,omitempty"`
+	Characters []InitiativeRoll `json:"participants"`
 	InProgress bool `json:"inProgress"`
 }
 
