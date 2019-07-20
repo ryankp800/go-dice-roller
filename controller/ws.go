@@ -45,6 +45,7 @@ var HandleInitConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http
 	log.Println("connected!")
 	// ensure connection close when function returns
 	defer ws.Close()
+
 	clients[ws] = true
 
 	broadcast <- currentBattle
@@ -176,6 +177,7 @@ func HandleInitiative() {
 		msg := <-broadcast
 		// send it out to every client that is currently connected
 		for client := range clients {
+			fmt.Println("handling init --> sending")
 			err := client.WriteJSON(msg)
 			if err != nil {
 				log.Printf("error: %v", err)
