@@ -47,6 +47,8 @@ var HandleInitConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http
 	defer ws.Close()
 	clients[ws] = true
 
+	broadcast <- currentBattle
+
 	var initiativeRoll InitiativeRoll
 	for {
 	fmt.Println("Running through loop")
