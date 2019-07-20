@@ -25,8 +25,6 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-
-
 func extractClaims(tokenString string) string {
 	claims := jwt.MapClaims{}
 	_, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -49,7 +47,7 @@ func extractClaims(tokenString string) string {
 	return "no username"
 }
 
-var HandleConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+var HandleRollDiceConnection = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print(err)
@@ -87,11 +85,6 @@ var HandleConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	}
 })
 
-// StartBattle handles the initial set up of a new encounter
-func StartBattle(r *http.Request, ws *websocket.Conn) {
-
-
-}
 
 // endTurn will end the current turn and increment order
 func endTurn() {
@@ -105,8 +98,8 @@ func resetBattle() {
 func startBattle() {
 	currentBattle.InProgress = true
 }
-// HandleInitConnections will handle incoming connections
-var HandleInitConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// HandleInitConnection will handle incoming connections
+var HandleInitConnection = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 
 	// Get the token from the url
@@ -144,7 +137,8 @@ var HandleInitConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http
 			}
 
 			// For NPC set the owner as the user who inputs the roll
-			// initiativeRoll.Owner = username
+			initiativeRoll.Owner = username
+
 			rollForInitiative(initiativeRoll, &currentBattle)
 
 			broadcast <- currentBattle
@@ -154,19 +148,14 @@ var HandleInitConnections = http.HandlerFunc(func(w http.ResponseWriter, r *http
 
 // HandleInitiative websocket to handle the initiative rolls
 func HandleInitiative() {
-	log.Println("HandleInitiative() started")
 	for {
-		log.Println("HandleInitiative() looped")
-		// grab next message from the broadcast channel
 		msg := <-broadcast
-		// send it out to every client that is currently connected
-		log.Printf("clijents: %v", clients)
 		for  client := range clients {
-			// log.Println("handling init --> sending to client %v", client)
+
 			err := client.WriteJSON(msg)
+
 			if err != nil {
-				log.Printf("error: %v, client # %v", err)
-				// TODO I dont think we want to close the client in this situation
+				log.Printf("error: %v", err)
 				err = client.Close()
 				delete(clients, client)
 			}
@@ -176,14 +165,11 @@ func HandleInitiative() {
 
 // BroadcastRoll sends new rolls to the channel and broadcasts to the websocket
 func BroadcastRoll() {
-	log.Println("BroadcastRoll() started")
 	for {
-		log.Println("BroadcastRoll() looped")
 		// grab next message from the broadcast channel
 		msg := <-BroadcastRolls
 		// send it out to every client that is currently connected
 		for client := range rollClients {
-			log.Println("meh")
 			err := client.WriteJSON(msg)
 			if err != nil {
 				log.Printf("error: %v", err)
@@ -193,5 +179,4 @@ func BroadcastRoll() {
 			}
 		}
 	}
-
 }

@@ -148,17 +148,12 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.Unmarshal(body, &user)
 	var res ResponseResult
 	if err != nil {
-		res.Error = err.Error()
-		json.NewEncoder(w).Encode(res)
-		return
-	}
-
-	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res.Error = err.Error()
 		json.NewEncoder(w).Encode(res)
 		return
 	}
+	
 	var result User
 	err = UserCollection.FindOne(context.TODO(), bson.D{{"username", user.Username}}).Decode(&result)
 
