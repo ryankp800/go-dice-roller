@@ -129,7 +129,6 @@ var HandleInitConnection = http.HandlerFunc(func(w http.ResponseWriter, r *http.
 			delete(clients, ws)
 			break
 		} else {
-			// Read in a new message as JSON and map it to a Message object
 
 			// If name is empty set username as name
 			if initiativeRoll.Name == "" {

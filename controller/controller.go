@@ -140,6 +140,40 @@ func extractDieList(valueList []string, re *regexp.Regexp) DiceRoll {
 	return dieList
 }
 
+var InitiativeHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
+
+	user := r.Context().Value("user")
+	k, _ := user.(*jwt.Token).Claims.(jwt.MapClaims)
+	username := k["username"].(string)
+
+
+	var initRoll InitiativeRoll
+
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	json.Unmarshal(b, &initRoll)
+
+	// If name is empty set username as name
+	if initRoll.Name == "" {
+		initRoll.Name = username
+	}
+
+	// For NPC set the owner as the user who inputs the roll
+	initRoll.Owner = username
+
+	rollForInitiative(initRoll, &currentBattle)
+
+	broadcast <- currentBattle
+
+	w.WriteHeader(http.StatusCreated)
+
+	return
+})
+
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
 

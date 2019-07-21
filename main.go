@@ -49,14 +49,15 @@ func routes() *mux.Router {
 	r.HandleFunc("/health", controller.HelloWorldHandler).Methods("GET")
 	r.Handle("/ws/init", controller.HandleInitConnection).Queries("token", "{token}")
 	r.Handle("/ws/roll", controller.HandleRollDiceConnection)
-	r.Handle("/roll", jwtMiddleware.Handler(controller.RollDiceHandler))
+	r.Handle("/roll", jwtMiddleware.Handler(controller.RollDiceHandler)).Queries("value", "{value}")
+	r.Handle("/init", jwtMiddleware.Handler(controller.InitiativeHandler)).Methods("POST")
 	r.Handle("/end", jwtMiddleware.Handler(controller.EndTurnHandler)).Methods("GET")
-	r.HandleFunc("/reset", controller.ResetBattleHandler)
-	r.HandleFunc("/getRoll/{id}", controller.GetRollHandler).Methods("GET")
+	r.Handle("/reset", jwtMiddleware.Handler(controller.ResetBattleHandler))
+
+	// r.HandleFunc("/getRoll/{id}", controller.GetRollHandler).Methods("GET")
 	r.HandleFunc("/register", controller.RegisterHandler).Methods("POST")
 	r.HandleFunc("/login", controller.LoginHandler).Methods("POST")
 	r.HandleFunc("/profile", controller.ProfileHandler).Methods("GET")
-	r.Queries("value", "{value}")
 	http.Handle("/", r)
 	return r
 }
