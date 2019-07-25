@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"log"
 	"math/rand"
 	"sort"
 
@@ -35,7 +34,6 @@ func UpdateOrder(battle Battle) Battle {
 	for i := range battle.Characters {
 		battle.Characters[i].Order = i
 	}
-	// fmt.Println(battle)
 
 	return battle
 }
@@ -47,9 +45,6 @@ func rollForInitiative(roll InitiativeRoll, battle *Battle) {
 	if roll.Advantage {
 		advDie := Dice{DiceValue: 20}
 		RollDie(&advDie)
-
-		log.Println("First roll: %i", die.RollValue)
-		log.Println("Second roll: %i", advDie.RollValue)
 
 		if advDie.RollValue > die.RollValue {
 			die = advDie

@@ -153,9 +153,34 @@ var DeleteInitHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	}
 	battle := deleteFromBattle(uuid)
 
-
 	b, _ := json.Marshal(battle)
 	w.Write(b)
+
+	return
+})
+
+var UpdateModifierHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
+	params := mux.Vars(r)
+	id := params["id"]
+
+	b, err := ioutil.ReadAll(r.Body); 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	var mod Modifier
+	err = json.Unmarshal(b, &mod); if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Printf("Error unmarshalling initiative list err %v", err)
+		return
+	}
+
+	uuid, err := guuid.Parse(id)
+	overrideCharacterModifier(uuid, mod.Mod)
+
+	w.WriteHeader(http.StatusOK)
+	data, _ := json.Marshal(currentBattle)
+	w.Write(data)
 
 	return
 })
@@ -181,7 +206,6 @@ var InitiativeHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	log.Printf("Character list %v", initRollList)
 
 	for _, initRoll := range initRollList.CharacterList {
 		// If name is empty set username as name
@@ -191,6 +215,7 @@ var InitiativeHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 
 		// For NPC set the owner as the user who inputs the roll
 		initRoll.Owner = username
+
 
 		rollForInitiative(initRoll, &currentBattle)
 

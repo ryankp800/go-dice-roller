@@ -111,6 +111,18 @@ func deleteFromBattle(id uuid.UUID) Battle{
 	return  currentBattle
 }
 
+func overrideCharacterModifier(id uuid.UUID, mod int) {
+	for i, char := range currentBattle.Characters {
+		if char.ID == id {
+			char.FinalValue, char.Modifier = (char.FinalValue - char.Modifier) + mod, mod
+			currentBattle.Characters[i] = char
+			currentBattle = UpdateOrder(currentBattle)
+			broadcast <- currentBattle
+			break
+		}
+	}
+}
+
 func remove(slice []InitiativeRoll, s int) []InitiativeRoll {
 	return append(slice[:s], slice[s+1:]...)
 }

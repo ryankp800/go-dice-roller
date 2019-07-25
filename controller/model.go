@@ -24,12 +24,16 @@ type DiceRoll struct {
 type InitiativeRoll struct {
 	ID              uuid.UUID `json:"id"`
 	Name            string `json:"name,omitempty"`
-	PlayerCharacter bool   `json:"player_character,omitempty"`
+	PlayerCharacter bool   `json:"player_character"`
 	Advantage       bool   `json:"advantage,omitempty"`
 	Modifier        int    `json:"modifier,omitempty"`
 	FinalValue      int    `json:"final_value,omitempty"`
 	Order           int    `json:"order"`
 	Owner			string `json:"owner,omitempty"`
+}
+
+type Modifier struct {
+	Mod int `json:"modifier"`
 }
 
 type InitiativeRollList struct {
