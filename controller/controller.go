@@ -161,6 +161,8 @@ var InitiativeHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	log.Printf("Character list %v", initRollList)
+
 	for _, initRoll := range initRollList.CharacterList {
 		// If name is empty set username as name
 		if initRoll.Name == "" {
@@ -171,6 +173,8 @@ var InitiativeHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 		initRoll.Owner = username
 
 		rollForInitiative(initRoll, &currentBattle)
+
+
 
 		broadcast <- currentBattle
 
