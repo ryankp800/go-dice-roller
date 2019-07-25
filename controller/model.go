@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -21,6 +22,7 @@ type DiceRoll struct {
 
 // InitiativeRoll a single PC initiative roll within a battle
 type InitiativeRoll struct {
+	ID              uuid.UUID `json:"id"`
 	Name            string `json:"name,omitempty"`
 	PlayerCharacter bool   `json:"player_character,omitempty"`
 	Advantage       bool   `json:"advantage,omitempty"`

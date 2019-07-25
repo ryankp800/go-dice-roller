@@ -4,6 +4,8 @@ import (
 	"log"
 	"math/rand"
 	"sort"
+
+	guuid "github.com/google/uuid"
 )
 
 // Roll Takes in a dice list and returns a new Rolled List
@@ -55,7 +57,7 @@ func rollForInitiative(roll InitiativeRoll, battle *Battle) {
 	}
 
 
-	roll.FinalValue = die.RollValue + roll.Modifier
+	roll.ID, roll.FinalValue = guuid.New(), die.RollValue + roll.Modifier
 
 	battle.Characters = append(battle.Characters, roll)
 
