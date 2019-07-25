@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 
+	guuid "github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
 
@@ -140,6 +141,25 @@ func extractDieList(valueList []string, re *regexp.Regexp) DiceRoll {
 	return dieList
 }
 
+var DeleteInitHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
+
+	params := mux.Vars(r)
+	id := params["id"]
+
+	uuid, err := guuid.Parse(id); if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	battle := deleteFromBattle(uuid)
+
+
+	b, _ := json.Marshal(battle)
+	w.Write(b)
+
+	return
+})
+
 var InitiativeHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
 
@@ -181,6 +201,8 @@ var InitiativeHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	battleBytes, _ := json.Marshal(currentBattle)
+	w.Write(battleBytes)
 
 	return
 })

@@ -51,6 +51,7 @@ func routes() *mux.Router {
 	r.Handle("/ws/roll", controller.HandleRollDiceConnection)
 	r.Handle("/roll", jwtMiddleware.Handler(controller.RollDiceHandler)).Queries("value", "{value}")
 	r.Handle("/init", jwtMiddleware.Handler(controller.InitiativeHandler)).Methods("POST")
+	r.Handle("/init/{id}", jwtMiddleware.Handler(controller.DeleteInitHandler)).Methods("DELETE")
 	r.Handle("/end", jwtMiddleware.Handler(controller.EndTurnHandler)).Methods("GET")
 	r.Handle("/reset", jwtMiddleware.Handler(controller.ResetBattleHandler))
 

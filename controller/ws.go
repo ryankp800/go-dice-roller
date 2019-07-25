@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -97,6 +98,21 @@ func resetBattle() {
 
 func startBattle() {
 	currentBattle.InProgress = true
+}
+
+func deleteFromBattle(id uuid.UUID) Battle{
+	for i, char := range currentBattle.Characters {
+		if char.ID == id {
+			currentBattle.Characters = remove(currentBattle.Characters, i)
+			broadcast <- currentBattle
+			break
+		}
+	}
+	return  currentBattle
+}
+
+func remove(slice []InitiativeRoll, s int) []InitiativeRoll {
+	return append(slice[:s], slice[s+1:]...)
 }
 // HandleInitConnection will handle incoming connections
 var HandleInitConnection = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
