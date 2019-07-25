@@ -30,6 +30,10 @@ type InitiativeRoll struct {
 	Owner			string `json:"owner,omitempty"`
 }
 
+type InitiativeRollList struct {
+	CharacterList []InitiativeRoll `json:"characters"`
+}
+
 // Battle object that structures the current fight
 type Battle struct {
 	Characters []InitiativeRoll `json:"participants"`

@@ -46,7 +46,7 @@ func routes() *mux.Router {
 	r := mux.NewRouter()
 
 
-	r.HandleFunc("/health", controller.HelloWorldHandler).Methods("GET")
+
 	r.Handle("/ws/init", controller.HandleInitConnection).Queries("token", "{token}")
 	r.Handle("/ws/roll", controller.HandleRollDiceConnection)
 	r.Handle("/roll", jwtMiddleware.Handler(controller.RollDiceHandler)).Queries("value", "{value}")
@@ -55,6 +55,7 @@ func routes() *mux.Router {
 	r.Handle("/reset", jwtMiddleware.Handler(controller.ResetBattleHandler))
 
 	// r.HandleFunc("/getRoll/{id}", controller.GetRollHandler).Methods("GET")
+	r.HandleFunc("/health", controller.HelloWorldHandler).Methods("GET")
 	r.HandleFunc("/register", controller.RegisterHandler).Methods("POST")
 	r.HandleFunc("/login", controller.LoginHandler).Methods("POST")
 	r.HandleFunc("/profile", controller.ProfileHandler).Methods("GET")

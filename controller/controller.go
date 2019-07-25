@@ -148,26 +148,33 @@ var InitiativeHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	username := k["username"].(string)
 
 
-	var initRoll InitiativeRoll
+	var initRollList InitiativeRollList
 
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	json.Unmarshal(b, &initRoll)
-
-	// If name is empty set username as name
-	if initRoll.Name == "" {
-		initRoll.Name = username
+	err = json.Unmarshal(b, &initRollList); if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Printf("Error unmarshalling initiative list err %v", err)
+		return
 	}
 
-	// For NPC set the owner as the user who inputs the roll
-	initRoll.Owner = username
+	for _, initRoll := range initRollList.CharacterList {
+		// If name is empty set username as name
+		if initRoll.Name == "" {
+			initRoll.Name = username
+		}
 
-	rollForInitiative(initRoll, &currentBattle)
+		// For NPC set the owner as the user who inputs the roll
+		initRoll.Owner = username
 
-	broadcast <- currentBattle
+		rollForInitiative(initRoll, &currentBattle)
+
+		broadcast <- currentBattle
+
+	}
 
 	w.WriteHeader(http.StatusCreated)
 
