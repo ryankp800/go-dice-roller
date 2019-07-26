@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -24,15 +25,11 @@ func HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
 	w.WriteHeader(http.StatusOK)
 
-	err := json.NewEncoder(w).Encode(`{"hello": "there"}`)
-
+	_, err := io.WriteString(w, `{"hello": world}`)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(err)
 	}
 }
-
-
 
 // GetRollHandler gets a roll from the database based on the object ID
 func GetRollHandler(w http.ResponseWriter,
@@ -47,13 +44,12 @@ func GetRollHandler(w http.ResponseWriter,
 
 }
 
-var RollDiceHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+var RollDiceHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
 	var diceResponse DiceResponse
 	user := r.Context().Value("user")
 	k, _ := user.(*jwt.Token).Claims.(jwt.MapClaims)
-			diceResponse.User.Username = k["username"].(string)
-
+	diceResponse.User.Username = k["username"].(string)
 
 	// Get the dice value list from the rul
 	queryVariableMap := r.URL.Query()
@@ -69,7 +65,7 @@ var RollDiceHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 	Roll(&dieList)
 	dieList.ID = primitive.NewObjectID()
 
-	insertDiceRoll(dieList)
+	// insertDiceRoll(dieList)
 
 	diceResponse.DiceRoll = dieList
 
@@ -81,8 +77,7 @@ var RollDiceHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 	}
 
 	// Send dice roll to channel to be sent over ws
-	BroadcastRolls <- diceResponse
-
+	broadCastDiceRoll(diceResponse)
 
 	// Write to the response
 	_, err = w.Write(data)
@@ -109,7 +104,6 @@ func getusername(tokenString string, diceResponse *DiceResponse) {
 		diceResponse.User.Username = "undefined"
 	}
 }
-
 
 func extractDieList(valueList []string, re *regexp.Regexp) DiceRoll {
 	var dieList DiceRoll
@@ -147,7 +141,8 @@ var DeleteInitHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	params := mux.Vars(r)
 	id := params["id"]
 
-	uuid, err := guuid.Parse(id); if err != nil {
+	uuid, err := guuid.Parse(id)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -164,12 +159,14 @@ var UpdateModifierHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http
 	params := mux.Vars(r)
 	id := params["id"]
 
-	b, err := ioutil.ReadAll(r.Body); 	if err != nil {
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	var mod Modifier
-	err = json.Unmarshal(b, &mod); if err != nil {
+	err = json.Unmarshal(b, &mod)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Printf("Error unmarshalling initiative list err %v", err)
 		return
@@ -192,7 +189,6 @@ var InitiativeHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	k, _ := user.(*jwt.Token).Claims.(jwt.MapClaims)
 	username := k["username"].(string)
 
-
 	var initRollList InitiativeRollList
 
 	b, err := ioutil.ReadAll(r.Body)
@@ -200,12 +196,12 @@ var InitiativeHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err = json.Unmarshal(b, &initRollList); if err != nil {
+	err = json.Unmarshal(b, &initRollList)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Printf("Error unmarshalling initiative list err %v", err)
 		return
 	}
-
 
 	for _, initRoll := range initRollList.CharacterList {
 		// If name is empty set username as name
@@ -216,10 +212,7 @@ var InitiativeHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 		// For NPC set the owner as the user who inputs the roll
 		initRoll.Owner = username
 
-
 		rollForInitiative(initRoll, &currentBattle)
-
-
 
 		broadcast <- currentBattle
 
@@ -261,7 +254,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			user.Password = string(hash)
 
-			_, err =  UserCollection.InsertOne(context.TODO(), user)
+			_, err = UserCollection.InsertOne(context.TODO(), user)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				res.Error = "Error While Creating User, Try Again"
@@ -361,13 +354,13 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-var EndTurnHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+var EndTurnHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
 	endTurn()
 	json.NewEncoder(w).Encode(`{"turnEnded": true}`)
 })
 
-var StartBattleHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+var StartBattleHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
 	startBattle()
 	json.NewEncoder(w).Encode(`{"battleStarted": true}`)

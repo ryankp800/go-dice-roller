@@ -74,7 +74,6 @@ func TestUpdateOrder(t *testing.T) {
 
 }
 
-
 func TestIncrimentOrder(t *testing.T) {
 	battle := Battle{
 		Characters: []InitiativeRoll{
@@ -90,6 +89,4 @@ func TestIncrimentOrder(t *testing.T) {
 	// 	t.Errorf("Battle order was not updated %v", battle)
 	// }
 
-
 }
-

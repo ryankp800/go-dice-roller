@@ -14,10 +14,10 @@ import (
 
 var clients = make(map[*websocket.Conn]bool) // connected clients
 var rollClients = make(map[*websocket.Conn]bool)
-var broadcast = make(chan Battle)            // broadcast channel
-var BroadcastRolls = make(chan DiceResponse)
+var broadcast = make(chan Battle) // broadcast channel
+var broadcastRolls = make(chan DiceResponse)
 
-var currentBattle  = Battle{Characters: []InitiativeRoll{}}
+var currentBattle = Battle{Characters: []InitiativeRoll{}}
 
 // Configure the upgrader
 var upgrader = websocket.Upgrader{
@@ -80,12 +80,15 @@ var HandleRollDiceConnection = http.HandlerFunc(func(w http.ResponseWriter, r *h
 			diceResponse.User.Username, diceResponse.DiceRoll = "fake", dieList
 
 			// send the new message to the broadcast channel
-			BroadcastRolls <- diceResponse
+			broadCastDiceRoll(diceResponse)
 
 		}
 	}
 })
 
+func broadCastDiceRoll(response DiceResponse) {
+	broadcastRolls <- response
+}
 
 // endTurn will end the current turn and increment order
 func endTurn() {
@@ -93,14 +96,14 @@ func endTurn() {
 }
 
 func resetBattle() {
-	currentBattle = Battle{InProgress:false}
+	currentBattle = Battle{InProgress: false}
 }
 
 func startBattle() {
 	currentBattle.InProgress = true
 }
 
-func deleteFromBattle(id uuid.UUID) Battle{
+func deleteFromBattle(id uuid.UUID) Battle {
 	for i, char := range currentBattle.Characters {
 		if char.ID == id {
 			currentBattle.Characters = remove(currentBattle.Characters, i)
@@ -108,13 +111,13 @@ func deleteFromBattle(id uuid.UUID) Battle{
 			break
 		}
 	}
-	return  currentBattle
+	return currentBattle
 }
 
 func overrideCharacterModifier(id uuid.UUID, mod int) {
 	for i, char := range currentBattle.Characters {
 		if char.ID == id {
-			char.FinalValue, char.Modifier = (char.FinalValue - char.Modifier) + mod, mod
+			char.FinalValue, char.Modifier = (char.FinalValue-char.Modifier)+mod, mod
 			currentBattle.Characters[i] = char
 			currentBattle = UpdateOrder(currentBattle)
 			broadcast <- currentBattle
@@ -126,6 +129,7 @@ func overrideCharacterModifier(id uuid.UUID, mod int) {
 func remove(slice []InitiativeRoll, s int) []InitiativeRoll {
 	return append(slice[:s], slice[s+1:]...)
 }
+
 // HandleInitConnection will handle incoming connections
 var HandleInitConnection = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -177,7 +181,7 @@ var HandleInitConnection = http.HandlerFunc(func(w http.ResponseWriter, r *http.
 func HandleInitiative() {
 	for {
 		msg := <-broadcast
-		for  client := range clients {
+		for client := range clients {
 
 			err := client.WriteJSON(msg)
 
@@ -194,7 +198,7 @@ func HandleInitiative() {
 func BroadcastRoll() {
 	for {
 		// grab next message from the broadcast channel
-		msg := <-BroadcastRolls
+		msg := <-broadcastRolls
 		// send it out to every client that is currently connected
 		for client := range rollClients {
 			err := client.WriteJSON(msg)

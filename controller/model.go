@@ -23,13 +23,13 @@ type DiceRoll struct {
 // InitiativeRoll a single PC initiative roll within a battle
 type InitiativeRoll struct {
 	ID              uuid.UUID `json:"id"`
-	Name            string `json:"name,omitempty"`
-	PlayerCharacter bool   `json:"player_character"`
-	Advantage       bool   `json:"advantage,omitempty"`
-	Modifier        int    `json:"modifier,omitempty"`
-	FinalValue      int    `json:"final_value,omitempty"`
-	Order           int    `json:"order"`
-	Owner			string `json:"owner,omitempty"`
+	Name            string    `json:"name,omitempty"`
+	PlayerCharacter bool      `json:"player_character"`
+	Advantage       bool      `json:"advantage,omitempty"`
+	Modifier        int       `json:"modifier,omitempty"`
+	FinalValue      int       `json:"final_value,omitempty"`
+	Order           int       `json:"order"`
+	Owner           string    `json:"owner,omitempty"`
 }
 
 type Modifier struct {
@@ -43,7 +43,7 @@ type InitiativeRollList struct {
 // Battle object that structures the current fight
 type Battle struct {
 	Characters []InitiativeRoll `json:"participants"`
-	InProgress bool `json:"inProgress"`
+	InProgress bool             `json:"inProgress"`
 }
 
 type User struct {

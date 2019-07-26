@@ -32,16 +32,18 @@ func ConfigMongo() {
 	url := os.Getenv("MONGODB_URI")
 
 	if url == "" {
-		url  =  "mongodb://localhost:27017"
+		url = "mongodb://localhost:27017"
 	}
 
 	clientOptions := options.Client().ApplyURI(url)
 
-	client, err := mongo.Connect(ctx, clientOptions); if err != nil {
+	client, err := mongo.Connect(ctx, clientOptions)
+	if err != nil {
 		log.Fatal("this", err)
 	}
 
-	err = client.Ping(context.TODO(), nil); if err != nil {
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
 		log.Fatal(err)
 	}
 
