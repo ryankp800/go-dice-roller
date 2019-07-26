@@ -101,6 +101,7 @@ func resetBattle() {
 
 func startBattle() {
 	currentBattle.InProgress = true
+	broadcast <- currentBattle
 }
 
 func deleteFromBattle(id uuid.UUID) Battle {
