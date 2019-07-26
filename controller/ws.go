@@ -1,10 +1,12 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"regexp"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
@@ -59,11 +61,25 @@ var HandleRollDiceConnection = http.HandlerFunc(func(w http.ResponseWriter, r *h
 	defer ws.Close()
 	rollClients[ws] = true
 
+	ws.SetPingHandler(func(m string) error {
+		go ws.WriteControl(websocket.PongMessage, []byte(m), time.Now().Add(time.Second*2))
+		return nil
+	})
+
 	for {
 		log.Println("Dice roller loop")
 		var diceResponse DiceResponse
 		var valueList RollRequest
-		err := ws.ReadJSON(&valueList)
+		msgType, bytes, err := ws.ReadMessage()
+
+		// We don't recognize any message that is not "ping".
+		if msgType == websocket.TextMessage {
+			log.Println("Received: ping.")
+			continue
+		} else {
+			json.Unmarshal(bytes, &valueList)
+		}
+
 		if err != nil {
 			log.Println("Dice roller loop ")
 			delete(rollClients, ws)
@@ -85,6 +101,7 @@ var HandleRollDiceConnection = http.HandlerFunc(func(w http.ResponseWriter, r *h
 		}
 	}
 })
+
 
 func broadCastDiceRoll(response DiceResponse) {
 	broadcastRolls <- response
@@ -156,7 +173,7 @@ var HandleInitConnection = http.HandlerFunc(func(w http.ResponseWriter, r *http.
 
 	var initiativeRoll InitiativeRoll
 	for {
-		fmt.Println("Running through loop")
+		log.Println("Running through loop")
 		err := ws.ReadJSON(&initiativeRoll)
 		if err != nil {
 			log.Printf("error: %v", err)
@@ -184,7 +201,7 @@ func HandleInitiative() {
 	for {
 		msg := <-broadcast
 		for client := range clients {
-
+			log.Printf("clients %v", client)
 			err := client.WriteJSON(msg)
 
 			if err != nil {
