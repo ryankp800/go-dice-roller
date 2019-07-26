@@ -97,6 +97,7 @@ func endTurn() {
 
 func resetBattle() {
 	currentBattle = Battle{InProgress: false}
+	broadcast <- currentBattle
 }
 
 func startBattle() {
