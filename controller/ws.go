@@ -96,7 +96,7 @@ func endTurn() {
 }
 
 func resetBattle() {
-	currentBattle = Battle{InProgress: false}
+	currentBattle = Battle{InProgress: false, Characters: []InitiativeRoll{}}
 	broadcast <- currentBattle
 }
 
